@@ -1,13 +1,13 @@
+open! Async_inotify
+open! Async
+open! Core
+
 module Make_global_dynamic () : sig
-  open! Async
   include Async_unix.Log.Global_intf
 
   val set_listener : string -> unit Deferred.t
 end = struct
   include Async_unix.Log.Make_global ()
-  open! Async_inotify
-  open! Async
-  open! Core
 
   let levels_to_string level =
     match level with
@@ -41,8 +41,9 @@ end = struct
     let%bind _, _, inotify_pipe =
       Async_inotify.create ~events:[ Event.Selector.Modified ] file_path
     in
-    let%bind () = update_level file_path in
-    Pipe.iter inotify_pipe ~f:(fun _ -> update_level file_path)
+    let%map () = update_level file_path in
+    don't_wait_for
+      (Pipe.iter inotify_pipe ~f:(fun _ -> update_level file_path))
   ;;
 end
 
