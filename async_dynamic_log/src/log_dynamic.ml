@@ -1,33 +1,21 @@
+open! Core
+open! Async
 include Async_unix.Log
 open! Async_inotify
-open! Async
-open! Core
 
-let levels_to_string level =
-  match level with `Info -> "Info" | `Debug -> "Debug" | `Error -> "Error"
-;;
-
-let string_to_levels str =
-  match str with
-  | "Info" -> `Info
-  | "Debug" -> `Debug
-  | "Error" -> `Error
-  | _ -> failwith "invalid type"
-;;
-
-(* create a dynamic_log.t expose only what you need but is seperate from the
+(* create a dynamic_log.t expose only what y2ou need but is seperate from the
    log *)
 
 let update_level file_path log =
   let%bind.Deferred () = Clock.after (Time_float_unix.Span.of_int_ms 50) in
-  let%map.Deferred file_contents = Reader.file_contents file_path in
+  let%map.Deferred file_contents = Async.Reader.file_contents file_path in
   match
     Or_error.try_with (fun () ->
-        let x = string_to_levels file_contents in
+        let x = Log.Level.of_string file_contents in
         set_level log x)
   with
   | Ok () ->
-    Core.print_endline ("Current level: " ^ levels_to_string (level log))
+    Core.print_endline ("Current level: " ^ Log.Level.to_string (level log))
   | Error e -> print_s [%message (e : Error.t)]
 ;;
 

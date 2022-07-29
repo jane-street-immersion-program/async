@@ -1,5 +1,6 @@
-open! Async_unix
+open! Core
 open! Async
+open! Async_unix
 
 type t
 
@@ -13,7 +14,7 @@ val create
   -> unit
   -> t
 
-module Make_global_dynamic () : Async_unix.Log.Global_intf
+module Make_global_dynamic () : Log.Global_intf
 
 val debug_s
   :  ?time:Core.Time_float.t
